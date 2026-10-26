@@ -67,6 +67,11 @@ impl Agent {
             interval = i;
         }
 
+        // Send trigger when started.
+        if tx.send(true).await.is_err() {
+            return;
+        }
+
         loop {
             tokio::select! {
                 _ = token.cancelled() => {
