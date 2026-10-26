@@ -124,6 +124,9 @@ pub struct Args {
     #[arg(short, long, help = "Interval")]
     pub interval: Option<u64>,
 
+    #[arg(long, help = "Duration")]
+    pub duration: String,
+
     #[arg(
         short,
         long,

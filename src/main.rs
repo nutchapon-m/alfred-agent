@@ -21,4 +21,6 @@ async fn main() {
             panic!("error: {}", e)
         }
     }
+
+    println!("{}", args.duration)
 }
