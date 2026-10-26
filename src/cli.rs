@@ -124,7 +124,7 @@ pub struct Args {
     #[arg(short, long, help = "Interval")]
     pub interval: Option<u64>,
 
-    #[arg(long, help = "Duration")]
+    #[arg(long, help = "Duration", default_value = "")]
     pub duration: String,
 
     #[arg(
@@ -237,6 +237,10 @@ impl Args {
             .into_string()
             .expect("path is not valid UTF-8");
         Ok(path)
+    }
+
+    pub fn get_duration(&self) -> u64 {
+        10
     }
 
     pub fn support_model(&self) -> bool {
