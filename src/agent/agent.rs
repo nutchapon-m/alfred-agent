@@ -67,9 +67,11 @@ impl Agent {
             interval = i;
         }
 
-        // Send trigger when started.
-        if tx.send(true).await.is_err() {
-            return;
+        if Arc::clone(&self).args.immediately {
+            // Send trigger immediately when started.
+            if tx.send(true).await.is_err() {
+                return;
+            }
         }
 
         loop {
@@ -95,7 +97,7 @@ impl Agent {
             .stderr(Stdio::piped())
             .spawn()?;
 
-        let prompt = self.args.load_prompt()?;
+        let prompt = self.args.get_prompt()?;
         if !prompt.is_empty() {
             if let Some(mut stdin) = child.stdin.take() {
                 stdin.write_all(prompt.as_bytes())?;
@@ -130,32 +132,32 @@ impl Agent {
     }
 
     fn build_args(&self) -> Result<Vec<String>, std::io::Error> {
-        let mut args: Vec<String> = ["-p", "--output-format", "stream-json"]
+        let mut args: Vec<String> = ["-p", "--output-format", "stream-json", "--verbose"]
             .into_iter()
             .map(String::from)
             .collect();
 
-        let system_prompt = self.args.load_system_prompt()?;
+        let system_prompt = self.args.get_system_prompt()?;
         if !system_prompt.is_empty() {
             args.push("--append-system-prompt".into());
             args.push(format!("\"{}\"", system_prompt));
         }
 
-        if !self.args.allowed_tools.is_empty() {
+        if let Some(allowed_tools) = self.args.allowed_tools.clone() {
             args.push("--allowedTools".into());
-            args.push(self.args.allowed_tools.clone().into());
+            args.push(allowed_tools);
         }
 
-        if !self.args.disallowed_tools.is_empty() {
+        if let Some(disallowed_tools) = self.args.disallowed_tools.clone() {
             args.push("--disallowedTools".into());
-            args.push(self.args.disallowed_tools.clone().into());
+            args.push(disallowed_tools);
         }
 
         if !self.args.max_turns.is_empty() {
             args.push("--max-turns".into());
             args.push(self.args.max_turns.clone().into());
         }
-        args.push("--verbose".into());
+
         if !self.args.model.is_empty() {
             if !self.args.support_model() {
                 return Err(std::io::Error::new(
@@ -165,6 +167,18 @@ impl Agent {
             }
             args.push("--model".into());
             args.push(self.args.model.clone());
+        }
+
+        let mcp_config_path = self.args.get_mcp_config()?;
+        if !mcp_config_path.is_empty() {
+            args.push("--mcp-config".into());
+            args.push(mcp_config_path);
+        }
+
+        let settings_file = self.args.get_settings()?;
+        if !settings_file.is_empty() {
+            args.push("--settings".into());
+            args.push(self.args.settings.clone());
         }
 
         args.push("--permission-mode".into());
