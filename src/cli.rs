@@ -205,7 +205,11 @@ impl Args {
             ));
         }
 
-        Ok(self.mcp_config.clone())
+        let path = path
+            .into_os_string()
+            .into_string()
+            .expect("path is not valid UTF-8");
+        Ok(path)
     }
 
     pub fn get_settings(&self) -> Result<String, std::io::Error> {
@@ -225,7 +229,11 @@ impl Args {
                 format!("invalid file type: {} (expected .json)", path.display()),
             ));
         }
-        Ok(self.settings.clone())
+        let path = path
+            .into_os_string()
+            .into_string()
+            .expect("path is not valid UTF-8");
+        Ok(path)
     }
 
     pub fn support_model(&self) -> bool {

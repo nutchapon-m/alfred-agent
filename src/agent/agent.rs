@@ -123,12 +123,11 @@ impl Agent {
             let mut bad = 0;
             if let Some(r) = read_stream(msg.as_bytes(), |_| n += 1, |_, _| bad += 1)? {
                 if let Some(result) = r.result {
-                    res_msg.push_str(&result.replace("\n", ""));
+                    res_msg.push_str(&result);
                 };
             };
         }
-
-        info!("claude agent output: {}", res_msg);
+        info!("\nclaude agent output: \n{}", res_msg);
         Ok(())
     }
 
