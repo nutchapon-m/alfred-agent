@@ -8,6 +8,7 @@ use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
 use crate::Args;
+use crate::cli::Effort;
 
 #[derive(Clone)]
 pub struct Agent {
@@ -180,6 +181,15 @@ impl Agent {
             args.push("--settings".into());
             args.push(self.args.settings.clone());
         }
+
+        if matches!(self.args.effort, Effort::Ultracode) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "effort `ultracode` is not supported by the claude CLI --effort flag",
+            ));
+        }
+        args.push("--effort".into());
+        args.push(self.args.effort.as_str().into());
 
         args.push("--permission-mode".into());
         args.push(self.args.permission_mode.as_str().into());

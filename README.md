@@ -53,7 +53,7 @@ Without `--run` the program parses arguments and exits.
 | `--disallowed-tools <LIST>` | unset | Passed to `--disallowedTools` when set |
 | `--max-turns <N>` | `50` | Passed to `--max-turns` |
 | `-p, --permission-mode <MODE>` | `accept-edits` | `accept-edits`, `bypass-permissions`, or `plan` |
-| `--effort <LEVEL>` | `medium` | `low`, `medium`, `high`, `xhigh`, `max`, `ultracode` (parsed; not yet passed to `claude`) |
+| `--effort <LEVEL>` | `medium` | `low`, `medium`, `high`, `xhigh`, `max`, `ultracode` (`ultracode` is rejected; `claude --effort` doesn't accept it) |
 | `--system-prompt <TEXT>` | unset | Inline system prompt; takes precedence over `--system-prompt-file` |
 | `--prompt <TEXT>` | unset | Inline prompt (wrapped as stream-json); takes precedence over `--prompt-file` |
 | `--system-prompt-file <PATH>` | `~/.alfred/system_prompt.txt` | Appended system prompt (`.txt`) |
