@@ -39,8 +39,8 @@ install -m 755 "$ROOT/target/release/$CARGO_BIN" "$BIN_DIR/$BIN_NAME"
 info "Creating config directory $CONFIG_DIR"
 mkdir -p "$CONFIG_DIR"
 [[ -e "$CONFIG_DIR/system_prompt.txt" ]] || : > "$CONFIG_DIR/system_prompt.txt"
-if [[ ! -e "$CONFIG_DIR/prompt.json" ]]; then
-  printf '%s\n' '{"type":"user","message":{"role":"user","content":"Hello"}}' > "$CONFIG_DIR/prompt.json"
+if [[ ! -e "$CONFIG_DIR/prompt.txt" ]]; then
+  printf '%s\n' 'Hello' > "$CONFIG_DIR/prompt.txt"
 fi
 
 case ":$PATH:" in

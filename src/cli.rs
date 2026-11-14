@@ -89,8 +89,8 @@ pub struct Args {
 
     #[arg(
         long,
-        help = "Path to the prompt json file",
-        default_value = "~/.alfred/prompt.json"
+        help = "Path to the prompt txt file",
+        default_value = "~/.alfred/prompt.txt"
     )]
     pub prompt_file: String,
 
@@ -166,8 +166,7 @@ impl Args {
 
     pub fn get_prompt(&self) -> Result<String, std::io::Error> {
         if let Some(p) = self.prompt.clone() {
-            let p = serde_json::json!({"type": "user", "message": {"role": "user", "content": p}});
-            return Ok(p.to_string());
+            return Ok(build_prompt_payload(&p));
         }
 
         let path: &Path = self.prompt_file.as_ref();
@@ -179,14 +178,19 @@ impl Args {
         // validate ext of file
         let is_txt = path
             .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("json"));
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("txt"));
         if !is_txt {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                format!("invalid file type: {} (expected .json)", path.display()),
+                format!("invalid file type: {} (expected .txt)", path.display()),
             ));
         }
-        fs::read_to_string(path)
+
+        let content = fs::read_to_string(path)?;
+        if content.trim().is_empty() {
+            return Ok("".to_string());
+        }
+        Ok(build_prompt_payload(&content))
     }
 
     pub fn get_mcp_config(&self) -> Result<String, std::io::Error> {
@@ -263,6 +267,12 @@ impl Args {
 
         support_models.contains(&self.model)
     }
+}
+
+/// Wrap prompt text in a `stream-json` input message for `claude --input-format stream-json`.
+fn build_prompt_payload(content: &str) -> String {
+    serde_json::json!({"type": "user", "message": {"role": "user", "content": content}})
+        .to_string()
 }
 
 fn expand_tilde(p: &Path) -> PathBuf {

@@ -18,7 +18,7 @@ git clone <repo-url> alfred_agent && cd alfred_agent
 
 The script builds a release binary, installs it as `alfred-agent` into
 `~/.local/bin`, and creates `~/.alfred/` with starter `system_prompt.txt` and
-`prompt.json` (existing files are never overwritten).
+`prompt.txt` (existing files are never overwritten).
 
 | Option | Effect |
 | --- | --- |
@@ -57,7 +57,7 @@ Without `--run` the program parses arguments and exits.
 | `--system-prompt <TEXT>` | unset | Inline system prompt; takes precedence over `--system-prompt-file` |
 | `--prompt <TEXT>` | unset | Inline prompt (wrapped as stream-json); takes precedence over `--prompt-file` |
 | `--system-prompt-file <PATH>` | `~/.alfred/system_prompt.txt` | Appended system prompt (`.txt`) |
-| `--prompt-file <PATH>` | `~/.alfred/prompt.json` | Prompt sent on stdin (`.json`) |
+| `--prompt-file <PATH>` | `~/.alfred/prompt.txt` | Prompt text (`.txt`), wrapped as stream-json and sent on stdin |
 | `--mcp-config <PATH>` | `~/.alfred/mcp_config.json` | MCP config (`.json`), passed to `--mcp-config` if the file exists |
 | `--settings <PATH>` | `~/.alfred/settings.json` | Claude settings (`.json`), passed to `--settings` if the file exists |
 | `-l, --log-level <LEVEL>` | `INFO` | `DEBUG`, `INFO`, `WARN`, `ERROR`, `TRACE` |
@@ -70,7 +70,9 @@ Supported models: `opus`, `sonnet`, `haiku`, `claude-opus-5-5`,
 ### Config files (`~/.alfred/`)
 
 - `system_prompt.txt` – plain text, appended to Claude's system prompt. Missing or empty = skipped.
-- `prompt.json` – the input message in `stream-json` input format, e.g.
+- `prompt.txt` – plain-text prompt. Its content is placed in the `content` field of a
+  `stream-json` input message before being written to Claude's stdin, e.g. a file
+  containing `Summarize today's TODOs` is sent as
 
   ```json
   {"type":"user","message":{"role":"user","content":"Summarize today's TODOs"}}
