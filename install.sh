@@ -7,8 +7,8 @@
 #   ./install.sh --uninstall     # remove the binary
 set -euo pipefail
 
-BIN_NAME="alfred-agent"      # installed name
-CARGO_BIN="alfred_agent"     # name produced by cargo
+BIN_NAME="al"      # installed name
+CARGO_BIN="al"     # name produced by cargo
 PREFIX="${PREFIX:-$HOME/.local}"
 BIN_DIR="$PREFIX/bin"
 CONFIG_DIR="$HOME/.alfred"
