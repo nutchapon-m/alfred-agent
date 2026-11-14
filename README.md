@@ -16,9 +16,9 @@ git clone <repo-url> alfred_agent && cd alfred_agent
 ./install.sh
 ```
 
-The script builds a release binary, installs it as `alfred-agent` into
-`~/.local/bin`, and creates `~/.alfred/` with starter `system_prompt.txt` and
-`prompt.txt` (existing files are never overwritten).
+The script builds a release binary, installs it as `al` into `~/.local/bin`,
+and creates `~/.alfred/` with an empty `system_prompt.txt` and a `prompt.txt`
+containing `Hello` (existing files are never overwritten).
 
 | Option | Effect |
 | --- | --- |
@@ -31,15 +31,18 @@ Make sure the bin directory is in your `PATH`.
 
 ```bash
 # run claude every 5 minutes
-alfred-agent --run --interval 300
+al --run --interval 300
 
-# custom model, tools, and log level
-alfred-agent --run -i 600 -m sonnet --allowed-tools "Read,Grep" -l DEBUG
+# run once at startup, then every 10 minutes, with a custom model, tools, and log level
+al --run -i 600 --immediately -m sonnet --allowed-tools "Read,Grep" -l debug
+
+# inline prompt instead of ~/.alfred/prompt.txt
+al --run -i 3600 --prompt "Summarize today's TODOs"
 ```
 
 `--run` requires `--interval`. Stop the agent with `Ctrl+C`.
 
-Without `--run` the program parses arguments and exits.
+Without `--run` the program parses arguments and exits. `al --version` prints `1.0`.
 
 ### Options
 
@@ -54,22 +57,25 @@ Without `--run` the program parses arguments and exits.
 | `--max-turns <N>` | `50` | Passed to `--max-turns` |
 | `-p, --permission-mode <MODE>` | `accept-edits` | `accept-edits`, `bypass-permissions`, or `plan` |
 | `--effort <LEVEL>` | `medium` | `low`, `medium`, `high`, `xhigh`, `max`, `ultracode` (`ultracode` is rejected; `claude --effort` doesn't accept it) |
-| `--system-prompt <TEXT>` | unset | Inline system prompt; takes precedence over `--system-prompt-file` |
+| `--system-prompt <TEXT>` | unset | Inline text appended to the system prompt; takes precedence over `--system-prompt-file` |
 | `--prompt <TEXT>` | unset | Inline prompt (wrapped as stream-json); takes precedence over `--prompt-file` |
 | `--system-prompt-file <PATH>` | `~/.alfred/system_prompt.txt` | Appended system prompt (`.txt`) |
 | `--prompt-file <PATH>` | `~/.alfred/prompt.txt` | Prompt text (`.txt`), wrapped as stream-json and sent on stdin |
 | `--mcp-config <PATH>` | `~/.alfred/mcp_config.json` | MCP config (`.json`), passed to `--mcp-config` if the file exists |
 | `--settings <PATH>` | `~/.alfred/settings.json` | Claude settings (`.json`), passed to `--settings` if the file exists |
-| `-l, --log-level <LEVEL>` | `INFO` | `DEBUG`, `INFO`, `WARN`, `ERROR`, `TRACE` |
-| `-v, --verbose` | off | Show full turn-by-turn output |
+| `-l, --log-level <LEVEL>` | `info` | `debug`, `info`, `warn`, `error`, `trace` (lowercase) |
+| `-v, --verbose` | off | Accepted but not used yet |
+| `--duration <VALUE>` | `""` | Accepted but not used yet |
 
 Supported models: `opus`, `sonnet`, `haiku`, `claude-opus-5-5`,
 `claude-sonnet-5-5`, `claude-haiku-5-5`, `claude-opus-5`, `claude-sonnet-5`,
-`claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`.
+`claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`. Any other value is
+rejected when a run starts; the error is logged and the loop continues.
 
 ### Config files (`~/.alfred/`)
 
-- `system_prompt.txt` – plain text, appended to Claude's system prompt. Missing or empty = skipped.
+- `system_prompt.txt` – plain text, passed to `--append-system-prompt`. Missing or empty = skipped.
+  Must have a `.txt` extension.
 - `prompt.txt` – plain-text prompt. Its content is placed in the `content` field of a
   `stream-json` input message before being written to Claude's stdin, e.g. a file
   containing `Summarize today's TODOs` is sent as
@@ -92,9 +98,11 @@ A leading `~` in file paths is expanded to your home directory.
    - **worker** – on each signal runs `handle()`.
    Ctrl+C cancels both through a `CancellationToken`.
 3. `handle()` spawns:
-   `claude -p --output-format stream-json --verbose --input-format stream-json --model <m> --mcp-config <f> --settings <f> --permission-mode <p> ...`
+   `claude -p --output-format stream-json --verbose [--append-system-prompt ...] [--allowedTools ...] [--disallowedTools ...] --max-turns <n> --model <m> [--mcp-config <f>] [--settings <f>] --effort <e> --permission-mode <p> --input-format stream-json`
    writes the prompt to stdin, waits, and parses stdout line by line.
-4. The `result` message text is logged at `INFO`. A non-zero exit code is logged as an error and the loop continues.
+4. The `result` message text is logged at `INFO`. A non-zero exit code or a config
+   error (bad model, wrong file extension, `ultracode` effort) is logged as an
+   error and the loop continues.
 
 ## Project layout
 
@@ -106,6 +114,7 @@ src/
 ├── config.rs        # env-based Config (.env via dotenvy; not yet wired in)
 ├── trace.rs         # tracing subscriber setup
 └── agent/
+    ├── mod.rs
     ├── agent.rs     # scheduler loop and claude subprocess handling
     └── model.rs     # typed model + parser for claude stream-json output
 install.sh           # build & install script
@@ -115,7 +124,7 @@ install.sh           # build & install script
 
 ```bash
 cargo build
-cargo run -- --run --interval 60 -l DEBUG
+cargo run -- --run --interval 60 --immediately -l debug
 cargo test
 ```
 
