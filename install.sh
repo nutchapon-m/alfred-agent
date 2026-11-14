@@ -30,7 +30,7 @@ command -v claude >/dev/null 2>&1 \
   || warn "'claude' CLI not found in PATH. alfred-agent needs it at runtime."
 
 info "Building release binary"
-(cd "$ROOT" && cargo build --release --locked)
+(cd "$ROOT" && cargo build --release --locked --bin "$CARGO_BIN")
 
 info "Installing to $BIN_DIR/$BIN_NAME"
 mkdir -p "$BIN_DIR"
