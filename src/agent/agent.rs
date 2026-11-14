@@ -127,7 +127,7 @@ impl Agent {
                 };
             };
         }
-        info!("\nclaude agent output: \n{}", res_msg);
+        info!("claude agent output: \n{}", res_msg);
         Ok(())
     }
 
